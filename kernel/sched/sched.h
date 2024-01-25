@@ -140,22 +140,31 @@ extern int sched_rr_timeslice;
  * increase coverage and consistency always enable it on 64-bit platforms.
  */
 #ifdef CONFIG_64BIT
-# define SCHED_LOAD_PRECISION_SHIFT 5
-# define NICE_0_LOAD_SHIFT	(SCHED_FIXEDPOINT_SHIFT + SCHED_LOAD_PRECISION_SHIFT)
-# define scale_load(w)		((w) << SCHED_LOAD_PRECISION_SHIFT)
+# define NICE_0_LOAD_SHIFT	(SCHED_FIXEDPOINT_SHIFT + SCHED_FIXEDPOINT_SHIFT)
+# define scale_load(w)		((w) << SCHED_FIXEDPOINT_SHIFT)
 # define scale_load_down(w) \
 ({ \
 	unsigned long __w = (w); \
 	if (__w) \
-		__w = max(2UL, __w >> SCHED_LOAD_PRECISION_SHIFT); \
+		__w = max(2UL, __w >> SCHED_FIXEDPOINT_SHIFT); \
 	__w; \
 })
 #else
-# define SCHED_LOAD_PRECISION_SHIFT 0
 # define NICE_0_LOAD_SHIFT	(SCHED_FIXEDPOINT_SHIFT)
 # define scale_load(w)		(w)
 # define scale_load_down(w)	(w)
 #endif
+
+#ifdef CONFIG_SCHED_BORE
+# ifdef CONFIG_64BIT
+#  define SCHED_AVG_LOAD_EXTRA_RESOLUTION 5
+#  define SCHED_AVG_LOAD_SHIFT \
+          (SCHED_FIXEDPOINT_SHIFT - SCHED_AVG_LOAD_EXTRA_RESOLUTION)
+# else // CONFIG_64BIT
+#  define SCHED_AVG_LOAD_EXTRA_RESOLUTION 0
+#  define SCHED_AVG_LOAD_SHIFT 0
+# endif // CONFIG_64BIT
+#endif // CONFIG_SCHED_BORE
 
 /*
  * Task weight (visible to users) and its load (invisible to users) have

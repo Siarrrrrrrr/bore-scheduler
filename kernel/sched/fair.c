@@ -816,13 +816,19 @@ static inline s64 entity_key(struct cfs_rq *cfs_rq, struct sched_entity *se)
  *
  * As measured, the max (key * weight) value was ~44 bits for a kernel build.
  */
+#if !defined(CONFIG_SCHED_BORE)
+#define entity_weight(se) scale_load_down(se->load.weight)
+#else // CONFIG_SCHED_BORE
 static unsigned long entity_weight(struct sched_entity *se) {
-	unsigned long weight = scale_load_down(se->load.weight);
-#ifdef CONFIG_SCHED_BORE
-	if (likely(sched_bore)) weight = unscale_slice(weight, se);
-#endif // CONFIG_SCHED_BORE
+	unsigned long weight = se->load.weight;
+	if (likely(weight)) {
+		weight >>= SCHED_AVG_LOAD_SHIFT;
+		if (likely(sched_bore)) weight = unscale_slice(weight, se);
+		weight = max(2UL, weight);
+	}
 	return weight;
 }
+#endif // CONFIG_SCHED_BORE
 
 static void
 avg_vruntime_add(struct cfs_rq *cfs_rq, struct sched_entity *se)
