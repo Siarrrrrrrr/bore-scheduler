@@ -160,7 +160,7 @@ static void update_slice_score(struct sched_entity *se) {
 	if (sched_burst_score_rounding) penalty += 0x2U;
 	se->slice_score = penalty >> 2;
 
-	if (se->slice_score != prev_score && se->slice_load) {
+	if ((se->slice_score != prev_score) && se->slice_load) {
 		avg_vruntime_sub(cfs_rq, se);
 		avg_vruntime_add(cfs_rq, se);
 	}
