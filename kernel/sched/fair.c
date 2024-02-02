@@ -133,7 +133,7 @@ static inline u32 calc_burst_penalty(u64 burst_time) {
 	return min(MAX_BURST_PENALTY, scaled_penalty);
 }
 
-static inline void update_burst_penalty(struct sched_entity *se) {
+static void update_burst_penalty(struct sched_entity *se) {
 	se->curr_burst_penalty = calc_burst_penalty(se->burst_time);
 	se->burst_penalty = max(se->prev_burst_penalty, se->curr_burst_penalty);
 }
@@ -181,7 +181,7 @@ static void restart_burst(struct sched_entity *se) {
 	update_slice_score(se);
 }
 
-static inline void restart_burst_rescale_deadline(struct sched_entity *se) {
+static void restart_burst_rescale_deadline(struct sched_entity *se) {
 	s64 vscaled, wremain, vremain = se->deadline - se->vruntime;
 	u8 prev_score = se->slice_score;
 	restart_burst(se);

@@ -4557,7 +4557,7 @@ static inline u8 __inherit_burst_direct(struct task_struct *p, u64 now) {
 	return parent->se.child_burst;
 }
 
-static inline void update_child_burst_topological(
+static void update_child_burst_topological(
 	struct task_struct *p, u64 now, u32 depth, u32 *acnt, u32 *asum) {
 	struct task_struct *child, *dec;
 	u32 cnt = 0, dcnt = 0;
@@ -4614,7 +4614,7 @@ static inline void inherit_burst(struct task_struct *p) {
 	p->se.prev_burst_penalty = max(p->se.prev_burst_penalty, burst_cache);
 }
 
-static inline void sched_post_fork_bore(struct task_struct *p) {
+static void sched_post_fork_bore(struct task_struct *p) {
 	if (p->sched_class == &fair_sched_class && likely(sched_bore))
 		inherit_burst(p);
 	p->se.burst_penalty = p->se.prev_burst_penalty;
