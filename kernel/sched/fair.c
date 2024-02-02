@@ -142,20 +142,8 @@ static inline u64 scale_slice(u64 delta, struct sched_entity *se) {
 	return mul_u64_u32_shr(delta, sched_prio_to_wmult[se->slice_score], 22);
 }
 
-static inline s64 scale_slice_s64(s64 delta, struct sched_entity *se) {
-	s64 result = scale_slice(abs(delta), se);
-	if (delta < 0) result = -result;
-	return result;
-}
-
 static inline u64 __unscale_slice(u64 delta, u8 score) {
 	return mul_u64_u32_shr(delta, sched_prio_to_weight[score], 10);
-}
-
-static inline s64 __unscale_slice_s64(s64 delta, u8 score) {
-	s64 result = __unscale_slice(abs(delta), score);
-	if (delta < 0) result = -result;
-	return result;
 }
 
 static inline u64 unscale_slice(u64 delta, struct sched_entity *se) {
@@ -194,12 +182,15 @@ static void restart_burst(struct sched_entity *se) {
 }
 
 static inline void restart_burst_rescale_deadline(struct sched_entity *se) {
-	s64 wremain, vremain = se->deadline - se->vruntime;
+	s64 vscaled, wremain, vremain = se->deadline - se->vruntime;
 	u8 prev_score = se->slice_score;
 	restart_burst(se);
 	if (prev_score > se->slice_score) {
-		wremain = __unscale_slice_s64(vremain, prev_score);
-		se->deadline = se->vruntime + scale_slice_s64(wremain, se);
+		wremain = __unscale_slice(abs(vremain), prev_score);
+		vscaled = scale_slice(wremain, se);
+		if (unlikely(vremain < 0))
+			vscaled = -vscaled;
+		se->deadline = se->vruntime + vscaled;
 	}
 }
 #endif // CONFIG_SCHED_BORE
