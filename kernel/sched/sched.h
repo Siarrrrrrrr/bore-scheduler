@@ -149,22 +149,17 @@ extern int sched_rr_timeslice;
 		__w = max(2UL, __w >> SCHED_FIXEDPOINT_SHIFT); \
 	__w; \
 })
+# ifdef CONFIG_SCHED_BORE
+#  define SCHED_AVG_LOAD_SHIFT 5
+# endif // CONFIG_SCHED_BORE
 #else
 # define NICE_0_LOAD_SHIFT	(SCHED_FIXEDPOINT_SHIFT)
 # define scale_load(w)		(w)
 # define scale_load_down(w)	(w)
-#endif
-
-#ifdef CONFIG_SCHED_BORE
-# ifdef CONFIG_64BIT
-#  define SCHED_AVG_LOAD_EXTRA_RESOLUTION 5
-#  define SCHED_AVG_LOAD_SHIFT \
-          (SCHED_FIXEDPOINT_SHIFT - SCHED_AVG_LOAD_EXTRA_RESOLUTION)
-# else // CONFIG_64BIT
-#  define SCHED_AVG_LOAD_EXTRA_RESOLUTION 0
+# ifdef CONFIG_SCHED_BORE
 #  define SCHED_AVG_LOAD_SHIFT 0
-# endif // CONFIG_64BIT
-#endif // CONFIG_SCHED_BORE
+# endif // CONFIG_SCHED_BORE
+#endif
 
 /*
  * Task weight (visible to users) and its load (invisible to users) have
