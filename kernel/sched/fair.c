@@ -842,7 +842,7 @@ avg_vruntime_add(struct cfs_rq *cfs_rq, struct sched_entity *se)
 #endif // CONFIG_SCHED_BORE
 	s64 key = entity_key(cfs_rq, se);
 
-	cfs_rq->avg_vruntime += key * (s64)weight;
+	cfs_rq->avg_vruntime += key * weight;
 	cfs_rq->avg_load += weight;
 }
 
@@ -858,7 +858,7 @@ avg_vruntime_sub(struct cfs_rq *cfs_rq, struct sched_entity *se)
 #endif // CONFIG_SCHED_BORE
 	s64 key = entity_key(cfs_rq, se);
 
-	cfs_rq->avg_vruntime -= key * (s64)weight;
+	cfs_rq->avg_vruntime -= key * weight;
 	cfs_rq->avg_load -= weight;
 }
 
@@ -868,7 +868,7 @@ void avg_vruntime_update(struct cfs_rq *cfs_rq, s64 delta)
 	/*
 	 * v' = v + d ==> avg_vruntime' = avg_runtime - d*avg_load
 	 */
-	cfs_rq->avg_vruntime -= (s64)cfs_rq->avg_load * delta;
+	cfs_rq->avg_vruntime -= cfs_rq->avg_load * delta;
 }
 
 /*
@@ -884,7 +884,7 @@ static u64 avg_key(struct cfs_rq *cfs_rq)
 	if (curr && curr->on_rq) {
 		unsigned long weight = entity_weight(curr);
 
-		avg += entity_key(cfs_rq, curr) * (s64)weight;
+		avg += entity_key(cfs_rq, curr) * weight;
 		load += weight;
 	}
 
@@ -950,7 +950,7 @@ int entity_eligible(struct cfs_rq *cfs_rq, struct sched_entity *se)
 	if (curr && curr->on_rq) {
 		unsigned long weight = entity_weight(curr);
 
-		avg += entity_key(cfs_rq, curr) * (s64)weight;
+		avg += entity_key(cfs_rq, curr) * weight;
 		load += weight;
 	}
 
@@ -3942,11 +3942,11 @@ static void reweight_eevdf(struct cfs_rq *cfs_rq, struct sched_entity *se,
 	else
 #endif // CONFIG_SCHED_BORE
 	vslice = (s64)(se->deadline - avruntime);
-	vslice = div_s64(vslice * (s64)old_weight, weight);
+	vslice = div_s64(vslice * old_weight, weight);
 
 	if (avruntime != se->vruntime) {
 		vlag = (s64)(avruntime - se->vruntime);
-		vlag = div_s64(vlag * (s64)old_weight, weight);
+		vlag = div_s64(vlag * old_weight, weight);
 		se->vruntime = avruntime - vlag;
 	}
 
@@ -3978,7 +3978,7 @@ static void reweight_entity(struct cfs_rq *cfs_rq, struct sched_entity *se,
 		 * Because we keep se->vlag = V - v_i, while: lag_i = w_i*(V - v_i),
 		 * we need to scale se->vlag when w_i changes.
 		 */
-		se->vlag = div_s64(se->vlag * (s64)se->load.weight, weight);
+		se->vlag = div_s64(se->vlag * se->load.weight, weight);
 	} else {
 		reweight_eevdf(cfs_rq, se, weight);
 	}
@@ -5368,7 +5368,7 @@ place_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
 		if (curr && curr->on_rq)
 			load += entity_weight(curr);
 
-		lag *= (s64)(load + entity_weight(se));
+		lag *= load + entity_weight(se);
 		if (WARN_ON_ONCE(!load))
 			load = 1;
 		lag = div64_s64(lag, load);
