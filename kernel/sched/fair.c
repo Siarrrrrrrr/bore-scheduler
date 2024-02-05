@@ -826,7 +826,7 @@ static unsigned long entity_weight(struct sched_entity *se) {
 	unsigned long weight = se->load.weight;
 	if (likely(weight && sched_bore))
 		weight = unscale_slice(weight, se);
-	return weight >> SCHED_AVG_LOAD_SHIFT;
+	return weight >> SCHED_FIXEDPOINT_SHIFT;
 }
 #endif // CONFIG_SCHED_BORE
 
