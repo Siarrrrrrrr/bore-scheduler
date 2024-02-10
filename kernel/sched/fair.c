@@ -160,7 +160,7 @@ static void update_slice_score(struct sched_entity *se) {
 	if (sched_burst_score_rounding) penalty += 0x2U;
 	se->slice_score = penalty >> 2;
 
-	if ((se->slice_score != prev_score) && se->real_on_rq) {
+	if ((se->slice_score != prev_score) && se->slice_load) {
 		avg_vruntime_sub(cfs_rq, se);
 		avg_vruntime_add(cfs_rq, se);
 	}
@@ -1036,16 +1036,10 @@ static void __enqueue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se)
 	se->min_deadline = se->deadline;
 	rb_add_augmented_cached(&se->run_node, &cfs_rq->tasks_timeline,
 				__entity_less, &min_deadline_cb);
-#ifdef CONFIG_SCHED_BORE
-	se->real_on_rq = true;
-#endif // CONFIG_SCHED_BORE
 }
 
 static void __dequeue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
-#ifdef CONFIG_SCHED_BORE
-	se->real_on_rq = false;
-#endif // CONFIG_SCHED_BORE
 	rb_erase_augmented_cached(&se->run_node, &cfs_rq->tasks_timeline,
 				  &min_deadline_cb);
 	avg_vruntime_sub(cfs_rq, se);

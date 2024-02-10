@@ -565,7 +565,6 @@ struct sched_entity {
 	u8				curr_burst_penalty;
 	u8				burst_penalty;
 	u8				slice_score;
-	bool			real_on_rq;
 	u8				child_burst;
 	u16				child_burst_cnt;
 	u64				child_burst_last_cached;
