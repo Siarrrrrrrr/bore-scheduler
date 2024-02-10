@@ -3926,7 +3926,14 @@ static void reweight_eevdf(struct cfs_rq *cfs_rq, struct sched_entity *se,
 	 *	   = V  - (V - v) * w / w'
 	 *	   = V  - vl * w / w'
 	 *	   = V  - vl'
-	 *
+	 */
+	if (avruntime != se->vruntime) {
+		vlag = (s64)(avruntime - se->vruntime);
+		vlag = div_s64(vlag * old_weight, weight);
+		se->vruntime = avruntime - vlag;
+	}
+
+	/*
 	 * DEADLINE
 	 * ========
 	 *
@@ -3938,23 +3945,11 @@ static void reweight_eevdf(struct cfs_rq *cfs_rq, struct sched_entity *se,
 	 *	   = V  - (V - v)*w/w' + (d - v)*w/w'
 	 *	   = V  + (d - V)*w/w'
 	 */
-#ifdef CONFIG_SCHED_BORE
-	if (likely(sched_bore))
-		vslice = (s64)(se->deadline - se->vruntime);
-	else
-#endif // CONFIG_SCHED_BORE
 	vslice = (s64)(se->deadline - avruntime);
 	vslice = div_s64(vslice * old_weight, weight);
-
-	if (avruntime != se->vruntime) {
-		vlag = (s64)(avruntime - se->vruntime);
-		vlag = div_s64(vlag * old_weight, weight);
-		se->vruntime = avruntime - vlag;
-	}
-
 #ifdef CONFIG_SCHED_BORE
 	if (likely(sched_bore))
-		se->deadline = min_vruntime(se->deadline, se->vruntime + vslice);
+		se->deadline = min_vruntime(se->deadline, avruntime + vslice);
 	else
 #endif // CONFIG_SCHED_BORE
 	se->deadline = avruntime + vslice;
