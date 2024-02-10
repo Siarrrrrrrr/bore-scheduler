@@ -8656,11 +8656,10 @@ static void yield_task_fair(struct rq *rq)
 	/*
 	 * Are we the only task in the tree?
 	 */
-#ifdef CONFIG_SCHED_BORE
-	if (unlikely(!sched_bore))
-#endif // CONFIG_SCHED_BORE
+#if !defined(CONFIG_SCHED_BORE)
 	if (unlikely(rq->nr_running == 1))
 		return;
+#endif // CONFIG_SCHED_BORE
 
 	update_rq_clock(rq);
 	/*
