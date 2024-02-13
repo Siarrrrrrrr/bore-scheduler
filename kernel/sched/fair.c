@@ -133,11 +133,6 @@ static inline u32 calc_burst_penalty(u64 burst_time) {
 	return min(MAX_BURST_PENALTY, scaled_penalty);
 }
 
-static void update_burst_penalty(struct sched_entity *se) {
-	se->curr_burst_penalty = calc_burst_penalty(se->burst_time);
-	se->burst_penalty = max(se->prev_burst_penalty, se->curr_burst_penalty);
-}
-
 static inline u64 scale_slice(u64 delta, struct sched_entity *se) {
 	return mul_u64_u32_shr(delta, sched_prio_to_wmult[se->slice_score], 22);
 }
@@ -164,6 +159,12 @@ static void update_slice_score(struct sched_entity *se) {
 		avg_vruntime_sub(cfs_rq, se);
 		avg_vruntime_add(cfs_rq, se);
 	}
+}
+
+static void update_burst_penalty(struct sched_entity *se) {
+	se->curr_burst_penalty = calc_burst_penalty(se->burst_time);
+	se->burst_penalty = max(se->prev_burst_penalty, se->curr_burst_penalty);
+	update_slice_score(se);
 }
 
 static inline u32 binary_smooth(u32 new, u32 old) {
@@ -1243,9 +1244,6 @@ static void update_deadline(struct cfs_rq *cfs_rq, struct sched_entity *se)
 	/*
 	 * EEVDF: vd_i = ve_i + r_i / w_i
 	 */
-#ifdef CONFIG_SCHED_BORE
-	update_slice_score(se);
-#endif // CONFIG_SCHED_BORE
 	se->deadline = se->vruntime + calc_delta_fair(se->slice, se);
 
 	/*
