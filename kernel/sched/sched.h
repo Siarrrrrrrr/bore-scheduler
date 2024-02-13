@@ -151,14 +151,14 @@ extern int sched_rr_timeslice;
 })
 # ifdef CONFIG_SCHED_BORE
 #  define SCHED_AVG_LOAD_SHIFT (SCHED_FIXEDPOINT_SHIFT - 5)
-# else // CONFIG_SCHED_BORE
-#  define SCHED_AVG_LOAD_SHIFT SCHED_FIXEDPOINT_SHIFT
 # endif // CONFIG_SCHED_BORE
 #else
 # define NICE_0_LOAD_SHIFT	(SCHED_FIXEDPOINT_SHIFT)
 # define scale_load(w)		(w)
 # define scale_load_down(w)	(w)
-# define SCHED_AVG_LOAD_SHIFT 0
+# ifdef CONFIG_SCHED_BORE
+#  define SCHED_AVG_LOAD_SHIFT 0
+# endif // CONFIG_SCHED_BORE
 #endif
 
 /*
