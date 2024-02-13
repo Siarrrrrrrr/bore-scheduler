@@ -134,7 +134,7 @@ static inline u32 calc_burst_penalty(u64 burst_time) {
 }
 
 static inline u64 scale_slice(u64 delta, struct sched_entity *se) {
-	return mul_u64_u32_shr(delta, sched_prio_to_wmult[se->slice_score], 22);
+	return mul_u64_u32_shr(delta, sched_prio_to_wmult[se->burst_score], 22);
 }
 
 static inline u64 __unscale_slice(u64 delta, u8 score) {
@@ -142,20 +142,20 @@ static inline u64 __unscale_slice(u64 delta, u8 score) {
 }
 
 static inline u64 unscale_slice(u64 delta, struct sched_entity *se) {
-	return __unscale_slice(delta, se->slice_score);
+	return __unscale_slice(delta, se->burst_score);
 }
 
 static void avg_vruntime_add(struct cfs_rq *cfs_rq, struct sched_entity *se);
 static void avg_vruntime_sub(struct cfs_rq *cfs_rq, struct sched_entity *se);
 
-static void update_slice_score(struct sched_entity *se) {
+static void update_burst_score(struct sched_entity *se) {
 	struct cfs_rq *cfs_rq = cfs_rq_of(se);
-	u8 prev_score = se->slice_score;
+	u8 prev_score = se->burst_score;
 	u32 penalty = se->burst_penalty;
 	if (sched_burst_score_rounding) penalty += 0x2U;
-	se->slice_score = penalty >> 2;
+	se->burst_score = penalty >> 2;
 
-	if ((se->slice_score != prev_score) && se->slice_load) {
+	if ((se->burst_score != prev_score) && se->burst_load) {
 		avg_vruntime_sub(cfs_rq, se);
 		avg_vruntime_add(cfs_rq, se);
 	}
@@ -164,7 +164,7 @@ static void update_slice_score(struct sched_entity *se) {
 static void update_burst_penalty(struct sched_entity *se) {
 	se->curr_burst_penalty = calc_burst_penalty(se->burst_time);
 	se->burst_penalty = max(se->prev_burst_penalty, se->curr_burst_penalty);
-	update_slice_score(se);
+	update_burst_score(se);
 }
 
 static inline u32 binary_smooth(u32 new, u32 old) {
@@ -179,14 +179,14 @@ static void restart_burst(struct sched_entity *se) {
 		binary_smooth(se->curr_burst_penalty, se->prev_burst_penalty);
 	se->curr_burst_penalty = 0;
 	se->burst_time = 0;
-	update_slice_score(se);
+	update_burst_score(se);
 }
 
 static void restart_burst_rescale_deadline(struct sched_entity *se) {
 	s64 vscaled, wremain, vremain = se->deadline - se->vruntime;
-	u8 prev_score = se->slice_score;
+	u8 prev_score = se->burst_score;
 	restart_burst(se);
-	if (prev_score > se->slice_score) {
+	if (prev_score > se->burst_score) {
 		wremain = __unscale_slice(abs(vremain), prev_score);
 		vscaled = scale_slice(wremain, se);
 		if (unlikely(vremain < 0))
@@ -838,7 +838,7 @@ avg_vruntime_add(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
 	unsigned long weight = entity_weight(se);
 #ifdef CONFIG_SCHED_BORE
-	se->slice_load = weight;
+	se->burst_load = weight;
 #endif // CONFIG_SCHED_BORE
 	s64 key = entity_key(cfs_rq, se);
 
@@ -853,8 +853,8 @@ avg_vruntime_sub(struct cfs_rq *cfs_rq, struct sched_entity *se)
 #if !defined(CONFIG_SCHED_BORE)
 	weight = entity_weight(se);
 #else // CONFIG_SCHED_BORE
-	weight = se->slice_load;
-	se->slice_load = 0;
+	weight = se->burst_load;
+	se->burst_load = 0;
 #endif // CONFIG_SCHED_BORE
 	s64 key = entity_key(cfs_rq, se);
 
@@ -12761,7 +12761,7 @@ static void task_fork_fair(struct task_struct *p)
 	if (curr)
 		update_curr(cfs_rq);
 #ifdef CONFIG_SCHED_BORE
-	update_slice_score(se);
+	update_burst_score(se);
 #endif // CONFIG_SCHED_BORE
 	place_entity(cfs_rq, se, ENQUEUE_INITIAL);
 	rq_unlock(rq, &rf);
