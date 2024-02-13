@@ -918,8 +918,13 @@ inline u64 avg_vruntime(struct cfs_rq *cfs_rq) {
  */
 static void update_entity_lag(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
-	SCHED_WARN_ON(!se->on_rq);
-	se->vlag = avg_vruntime(cfs_rq) - se->vruntime;
+ 	SCHED_WARN_ON(!se->on_rq);
+	s64 lag = avg_vruntime(cfs_rq) - se->vruntime;
+#if !defined(CONFIG_SCHED_BORE)
+	s64 limit = calc_delta_fair(max_t(u64, 2*se->slice, TICK_NSEC), se);
+	lag = clamp(lag, -limit, limit);
+#endif // CONFIG_SCHED_BORE
+	se->vlag = lag;
 }
 
 /*
@@ -5300,12 +5305,13 @@ place_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
 		struct sched_entity *curr = cfs_rq->curr;
 		unsigned long load;
 
-		u64 limit = calc_delta_fair(max_t(u64, se->slice*2, TICK_NSEC), se);
-		s64 overmet = limit, undermet = limit;
+		lag = se->vlag;
 #ifdef CONFIG_SCHED_BORE
+		u64 limit = calc_delta_fair(max_t(u64, 2*se->slice, TICK_NSEC), se);
+		s64 overmet = limit, undermet = limit;
 		if (likely(sched_bore)) overmet = div_s64(overmet, 2);
+		lag = clamp(lag, -overmet, undermet);
 #endif // CONFIG_SCHED_BORE
-		lag = clamp(se->vlag, -overmet, undermet);
 
 		/*
 		 * If we want to place a task and preserve lag, we have to
