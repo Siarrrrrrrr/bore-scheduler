@@ -928,16 +928,16 @@ inline u64 avg_vruntime(struct cfs_rq *cfs_rq) {
  */
 static void update_entity_lag(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
- 	s64 lag, overrun, underrun;
+	s64 lag, limit;
 
 	SCHED_WARN_ON(!se->on_rq);
 	lag = avg_vruntime(cfs_rq) - se->vruntime;
-	overrun = underrun = calc_delta_fair(max_t(u64, 2*se->slice, TICK_NSEC), se);
+
+	limit = calc_delta_fair(max_t(u64, 2*se->slice, TICK_NSEC), se);
 #ifdef CONFIG_SCHED_BORE
-	if (likely(sched_bore)) overrun >>= 1;
+	if (likely(sched_bore)) limit >>= 1;
 #endif // CONFIG_SCHED_BORE
-	lag = clamp(lag, -overrun, underrun);
-	se->vlag = lag;
+	se->vlag = clamp(lag, -limit, limit);
 }
 
 /*
