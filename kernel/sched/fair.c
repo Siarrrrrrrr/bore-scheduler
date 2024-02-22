@@ -883,7 +883,7 @@ void avg_vruntime_update(struct cfs_rq *cfs_rq, s64 delta)
  * Specifically: avg_runtime() + 0 must result in entity_eligible() := true
  * For this to be so, the result of this function must have a left bias.
  */
-static u64 avg_key(struct cfs_rq *cfs_rq)
+u64 avg_vruntime(struct cfs_rq *cfs_rq)
 {
 	struct sched_entity *curr = cfs_rq->curr;
 	s64 avg = cfs_rq->avg_vruntime;
@@ -903,11 +903,7 @@ static u64 avg_key(struct cfs_rq *cfs_rq)
 		avg = div64_s64(avg, load);
 	}
 
-	return avg;
-}
-
-inline u64 avg_vruntime(struct cfs_rq *cfs_rq) {
-	return cfs_rq->min_vruntime + avg_key(cfs_rq);
+	return cfs_rq->min_vruntime + avg;
 }
 
 /*
