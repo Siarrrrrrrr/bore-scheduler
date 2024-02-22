@@ -212,7 +212,7 @@ static const struct file_operations sched_min_base_slice_fops = {
 	.llseek		= seq_lseek,
 	.release	= single_release,
 };
-#else // CONFIG_SCHED_BORE
+#else // !CONFIG_SCHED_BORE
 static ssize_t sched_scaling_write(struct file *filp, const char __user *ubuf,
 				   size_t cnt, loff_t *ppos)
 {
@@ -395,7 +395,7 @@ static __init int sched_init_debug(void)
 #ifdef CONFIG_SCHED_BORE
 	debugfs_create_file("min_base_slice_ns", 0644, debugfs_sched, NULL, &sched_min_base_slice_fops);
 	debugfs_create_u32("base_slice_ns", 0400, debugfs_sched, &sysctl_sched_base_slice);
-#else // CONFIG_SCHED_BORE
+#else // !CONFIG_SCHED_BORE
 	debugfs_create_u32("base_slice_ns", 0644, debugfs_sched, &sysctl_sched_base_slice);
 #endif // CONFIG_SCHED_BORE
 

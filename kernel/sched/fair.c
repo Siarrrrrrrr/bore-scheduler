@@ -74,7 +74,7 @@
  */
 #ifdef CONFIG_SCHED_BORE
 unsigned int sysctl_sched_tunable_scaling = SCHED_TUNABLESCALING_NONE;
-#else // CONFIG_SCHED_BORE
+#else // !CONFIG_SCHED_BORE
 unsigned int sysctl_sched_tunable_scaling = SCHED_TUNABLESCALING_LOG;
 #endif // CONFIG_SCHED_BORE
 
@@ -88,7 +88,7 @@ unsigned int sysctl_sched_tunable_scaling = SCHED_TUNABLESCALING_LOG;
 unsigned int            sysctl_sched_base_slice = 1000000000ULL / HZ;
 static unsigned int configured_sched_base_slice = 1000000000ULL / HZ;
 unsigned int        sysctl_sched_min_base_slice =    2000000ULL;
-#else // CONFIG_SCHED_BORE
+#else // !CONFIG_SCHED_BORE
 unsigned int sysctl_sched_base_slice			= 750000ULL;
 static unsigned int normalized_sysctl_sched_base_slice	= 750000ULL;
 #endif // CONFIG_SCHED_BORE
@@ -398,7 +398,7 @@ static void update_sysctl(void) {
 		max(sysctl_sched_min_base_slice, configured_sched_base_slice);
 }
 void sched_update_min_base_slice(void) { update_sysctl(); }
-#else // CONFIG_SCHED_BORE
+#else // !CONFIG_SCHED_BORE
 static unsigned int get_update_sysctl_factor(void)
 {
 	unsigned int cpus = min_t(unsigned int, num_online_cpus(), 8);
@@ -1396,7 +1396,7 @@ static void update_curr(struct cfs_rq *cfs_rq)
 	curr->burst_time += delta_exec;
 	update_burst_penalty(curr);
 	curr->vruntime += max(1ULL, calc_delta_fair(delta_exec, curr));
-#else // CONFIG_SCHED_BORE
+#else // !CONFIG_SCHED_BORE
 	curr->vruntime += calc_delta_fair(delta_exec, curr);
 #endif // CONFIG_SCHED_BORE
 	update_deadline(cfs_rq, curr);

@@ -1947,7 +1947,7 @@ static inline void dirty_sched_domain_sysctl(int cpu)
 
 #ifdef CONFIG_SCHED_BORE
 extern void sched_update_min_base_slice(void);
-#else // CONFIG_SCHED_BORE
+#else // !CONFIG_SCHED_BORE
 extern int sched_update_scaling(void);
 #endif // CONFIG_SCHED_BORE
 
